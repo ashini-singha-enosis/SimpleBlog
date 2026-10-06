@@ -23,6 +23,8 @@ class PostService
     /**
      * Published posts for the homepage, cached per page.
      *
+     * An author id limits the cached page to that user's public posts.
+     *
      * @return array<string, mixed>
      */
     public function paginatedPublished(int $page, int $perPage = 9, ?int $authorId = null): array

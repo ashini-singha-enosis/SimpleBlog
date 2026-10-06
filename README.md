@@ -5,6 +5,8 @@ A small production-style blog built as a Laravel modular monolith. Public reader
 ## Requirements
 
 - Paginated homepage of posts that are published and whose `published_at` is in the past
+- Signed-in readers can filter that list to their own published posts (`?mine=1`); guests always see the public list
+- A dashboard for the signed-in user with their name, email, and post counts
 - SEO-friendly post URLs: `/posts/{slug}`
 - Authenticated create, update, and soft delete
 - Authors can change their own posts; admins can change any post
@@ -19,7 +21,7 @@ A small production-style blog built as a Laravel modular monolith. Public reader
 - Eloquent
 - Inertia 3, React 19, TypeScript
 - Tailwind CSS 4
-- Laravel Fortify for login, registration, and email verification
+- Laravel Fortify for email-and-password login, registration, and email verification. Passkeys and two-factor authentication are not part of the app.
 - Pest for tests
 
 The request flow is:
@@ -115,7 +117,10 @@ php artisan test
 - `Post` uses soft deletes. Normal deletion sets `deleted_at` and leaves the row in place, so restore or permanent deletion can be added later on the same model.
 - `PostPolicy` allows any authenticated user to create a post. The author or an admin may update or delete it. `is_admin` on `users` is the only role flag.
 - `StorePostRequest` and `UpdatePostRequest` validate input and authorize through the policy. Controllers persist `$request->validated()` only.
-- `PostService` creates and updates posts, builds a unique slug from the title, sets `published_at` to the current time when a post is published without a date, writes a short log line, and dispatches post events.
+- `PostService` creates and updates posts, builds a unique slug from the title, sets `published_at` to the current time when a post is published without a date, writes a short log line, and dispatches post events. `paginatedPublished` caches each homepage page. An author id on that call limits the cached page to that user's public posts.
+- `/dashboard` shows the signed-in user's name and email, plus counts of every post they created, posts already live on the site, and drafts. It links to the public site and to post management.
+- The signed-in sidebar includes **View site**, which goes to `/`.
+- On the homepage, a signed-in user can choose **All posts** or **My posts**. **My posts** requests `/?mine=1`. Pagination keeps `mine=1`. Switching the filter starts again at page 1. Drafts stay off this page.
 - Slugs stay unique, including against soft-deleted rows. A title change generates a new slug. An unchanged title keeps the current slug.
 - `PostCreated`, `PostUpdated`, `PostPublished`, and `PostDeleted` are handled by `InvalidatePostCache`.
 - The homepage caches each page for 10 minutes under a versioned key. Those events increment the version, so the next read misses the old pages. The public query still hides anything with a future `published_at`, so a scheduled post can take up to the cache TTL to appear if nothing else changes the cache.
@@ -126,6 +131,8 @@ php artisan test
 | Method | URI | Name |
 | --- | --- | --- |
 | GET | `/` | `home` |
+| GET | `/?mine=1` | `home` (signed-in user's published posts) |
+| GET | `/dashboard` | `dashboard` |
 | GET | `/posts/{post:slug}` | `posts.show` |
 | GET | `/admin/posts` | `admin.posts.index` |
 | GET | `/admin/posts/create` | `admin.posts.create` |

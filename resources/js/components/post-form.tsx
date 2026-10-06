@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import PostController from '@/actions/App/Http/Controllers/Admin/PostController';
-import FormError from '@/components/form-error';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,7 +47,7 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                             }
                             placeholder="Post title"
                         />
-                        <FormError id="title-error" message={errors.title} />
+                        <InputError id="title-error" message={errors.title} />
                     </div>
 
                     <div className="grid gap-2">
@@ -65,7 +65,7 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                             }
                             placeholder="Optional short summary"
                         />
-                        <FormError
+                        <InputError
                             id="excerpt-error"
                             message={errors.excerpt}
                         />
@@ -85,7 +85,7 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                             }
                             placeholder="Write the post. Plain text is shown as entered."
                         />
-                        <FormError id="body-error" message={errors.body} />
+                        <InputError id="body-error" message={errors.body} />
                     </div>
 
                     <div className="grid gap-6 sm:grid-cols-2">
@@ -108,7 +108,7 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                                 <option value="draft">Draft</option>
                                 <option value="published">Published</option>
                             </select>
-                            <FormError
+                            <InputError
                                 id="status-error"
                                 message={errors.status}
                             />
@@ -136,7 +136,7 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                                 Leave blank to publish immediately when the
                                 status is published.
                             </p>
-                            <FormError
+                            <InputError
                                 id="published-at-error"
                                 message={errors.published_at}
                             />
