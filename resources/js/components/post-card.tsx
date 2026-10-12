@@ -7,6 +7,13 @@ import type { PostSummary } from '@/types/blog';
 export default function PostCard({ post }: { post: PostSummary }) {
     return (
         <article className="space-y-3 border-b py-8">
+            {post.image_card_url || post.image_url ? (
+                <img
+                    src={post.image_card_url || post.image_url || ''}
+                    alt=""
+                    className="max-h-96 w-full rounded-lg object-cover"
+                />
+            ) : null}
             <p className="text-sm text-muted-foreground">
                 {post.author?.name ?? 'Unknown'} ·{' '}
                 <time dateTime={post.published_at ?? undefined}>

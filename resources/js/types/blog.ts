@@ -1,3 +1,23 @@
+export type PostStatusName =
+    | 'draft'
+    | 'in_review'
+    | 'changes_requested'
+    | 'scheduled'
+    | 'published';
+
+export type StatusOption = {
+    value: PostStatusName;
+    label: string;
+};
+
+export type PostRevisionSummary = {
+    id: number;
+    status: PostStatusName;
+    lock_version: number;
+    created_at: string | null;
+    author: string;
+};
+
 export type PostAuthor = {
     id?: number;
     name: string;
@@ -19,9 +39,12 @@ export type PostSummary = {
     slug: string;
     excerpt: string | null;
     published_at: string | null;
-    status?: 'draft' | 'published';
+    status?: PostStatusName;
     updated_at?: string | null;
     author?: PostAuthor | null;
+    image_url?: string | null;
+    image_card_url?: string | null;
+    image_full_url?: string | null;
     category?: TaxonomyTerm | null;
     tags?: TaxonomyTerm[];
 };
@@ -31,6 +54,7 @@ export type PostDetail = {
     excerpt: string | null;
     body: string;
     published_at: string | null;
+    image_url: string | null;
     author: PostAuthor;
     category: TaxonomyTerm | null;
     tags: TaxonomyTerm[];
@@ -41,8 +65,10 @@ export type PostFormData = {
     title: string;
     excerpt: string | null;
     body: string;
-    status: 'draft' | 'published';
+    status: PostStatusName;
     published_at: string | null;
+    image_url?: string | null;
+    lock_version?: number;
     category?: string | null;
     tags?: string[];
 };

@@ -1,15 +1,21 @@
 import { Badge } from '@/components/ui/badge';
 
+const labels = {
+    draft: 'Draft',
+    in_review: 'In review',
+    changes_requested: 'Changes requested',
+    scheduled: 'Scheduled',
+    published: 'Published',
+} as const;
+
 export default function StatusBadge({
     status,
 }: {
-    status: 'draft' | 'published';
+    status: keyof typeof labels;
 }) {
-    const published = status === 'published';
-
     return (
-        <Badge variant={published ? 'default' : 'secondary'}>
-            {published ? 'Published' : 'Draft'}
+        <Badge variant={status === 'published' ? 'default' : 'secondary'}>
+            {labels[status]}
         </Badge>
     );
 }

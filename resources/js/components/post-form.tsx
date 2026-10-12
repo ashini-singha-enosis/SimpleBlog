@@ -1,5 +1,5 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import PostController from '@/actions/App/Http/Controllers/Admin/PostController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toDateTimeLocal, toUtcIsoFromLocalDateTime } from '@/lib/dates';
 import { cn } from '@/lib/utils';
-import type { PostFormData } from '@/types/blog';
+import type { PostFormData, StatusOption } from '@/types/blog';
 
 const fieldClassName =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px]';
@@ -17,16 +17,24 @@ export default function PostForm({
     post,
     categories = [],
     tags = [],
+    statuses = [],
 }: {
     post?: PostFormData;
     categories?: string[];
     tags?: string[];
+    statuses?: StatusOption[];
 }) {
     const [selectedTags, setSelectedTags] = useState<string[]>(
         post?.tags ?? [],
     );
     const [tagQuery, setTagQuery] = useState('');
     const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+    const [coverPreview, setCoverPreview] = useState<string | null>(
+        post?.image_url ?? null,
+    );
+    const [removeImage, setRemoveImage] = useState(false);
+    const [fileInputKey, setFileInputKey] = useState(0);
+    const coverPreviewRef = useRef<string | null>(post?.image_url ?? null);
     const normalizedQuery = tagQuery.trim().toLowerCase();
     const suggestions = tags.filter(
         (name) =>
@@ -56,6 +64,15 @@ export default function PostForm({
         setSuggestionsOpen(false);
     }
 
+    function replaceCoverPreview(next: string | null) {
+        if (coverPreviewRef.current?.startsWith('blob:')) {
+            URL.revokeObjectURL(coverPreviewRef.current);
+        }
+
+        coverPreviewRef.current = next;
+        setCoverPreview(next);
+    }
+
     return (
         <Form
             {...(post
@@ -71,6 +88,7 @@ export default function PostForm({
                             ? toUtcIsoFromLocalDateTime(publishedAt)
                             : publishedAt,
                     tags: selectedTags,
+                    remove_image: removeImage ? 1 : 0,
                 };
             }}
             className="space-y-6"
@@ -92,6 +110,55 @@ export default function PostForm({
                             placeholder="Post title"
                         />
                         <InputError id="title-error" message={errors.title} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="image">Cover image</Label>
+                        {coverPreview ? (
+                            <img
+                                src={coverPreview}
+                                alt=""
+                                className="max-h-64 w-full rounded-lg object-cover"
+                            />
+                        ) : null}
+                        <Input
+                            key={fileInputKey}
+                            id="image"
+                            name="image"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            aria-invalid={errors.image ? true : undefined}
+                            aria-describedby={
+                                errors.image ? 'image-error' : undefined
+                            }
+                            onChange={(event) => {
+                                const file = event.target.files?.[0];
+
+                                if (!file) {
+                                    return;
+                                }
+
+                                setRemoveImage(false);
+                                replaceCoverPreview(URL.createObjectURL(file));
+                            }}
+                        />
+                        {coverPreview ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    setRemoveImage(true);
+                                    setFileInputKey((current) => current + 1);
+                                    replaceCoverPreview(null);
+                                }}
+                            >
+                                Remove image
+                            </Button>
+                        ) : null}
+                        <p className="text-sm text-muted-foreground">
+                            Optional JPG, PNG, WEBP, or GIF up to 2 MB.
+                        </p>
+                        <InputError id="image-error" message={errors.image} />
                     </div>
 
                     <div className="grid gap-2">
@@ -149,8 +216,26 @@ export default function PostForm({
                                     'aria-invalid:border-destructive',
                                 )}
                             >
-                                <option value="draft">Draft</option>
-                                <option value="published">Published</option>
+                                {(statuses.length > 0
+                                    ? statuses
+                                    : [
+                                          {
+                                              value: 'draft' as const,
+                                              label: 'Draft',
+                                          },
+                                          {
+                                              value: 'published' as const,
+                                              label: 'Published',
+                                          },
+                                      ]
+                                ).map((status) => (
+                                    <option
+                                        key={status.value}
+                                        value={status.value}
+                                    >
+                                        {status.label}
+                                    </option>
+                                ))}
                             </select>
                             <InputError
                                 id="status-error"
@@ -165,7 +250,9 @@ export default function PostForm({
                                 name="published_at"
                                 type="datetime-local"
                                 defaultValue={toDateTimeLocal(
-                                    post?.published_at,
+                                    post
+                                        ? post.published_at
+                                        : new Date().toISOString(),
                                 )}
                                 aria-invalid={
                                     errors.published_at ? true : undefined
@@ -177,15 +264,24 @@ export default function PostForm({
                                 }
                             />
                             <p className="text-sm text-muted-foreground">
-                                Leave blank to publish immediately when the
-                                status is published.
+                                {post
+                                    ? 'Change this to schedule the post. A future time is saved as scheduled and goes live at that moment.'
+                                    : 'Starts at the current date and time. A future time is saved as scheduled and goes live at that moment.'}
                             </p>
-                            <InputError
-                                id="published-at-error"
-                                message={errors.published_at}
-                            />
+                        <InputError
+                            id="published-at-error"
+                            message={errors.published_at}
+                        />
                         </div>
                     </div>
+
+                    {post?.lock_version !== undefined ? (
+                        <input
+                            type="hidden"
+                            name="lock_version"
+                            value={post.lock_version}
+                        />
+                    ) : null}
 
                     <div className="grid gap-2">
                         <Label htmlFor="category">Category</Label>

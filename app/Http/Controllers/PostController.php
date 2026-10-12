@@ -28,6 +28,7 @@ class PostController extends Controller
                 'excerpt' => $post->excerpt,
                 'body' => $post->body,
                 'published_at' => $post->published_at?->toIso8601String(),
+                'image_url' => $post->image_full_url ?? $post->image_url,
                 'author' => [
                     'name' => $post->author->name,
                 ],

@@ -18,6 +18,13 @@ export default function Show({ post }: { post: PostDetail }) {
                         <ArrowLeft className="size-4" />
                         Blog
                     </Link>
+                    {post.image_url ? (
+                        <img
+                            src={post.image_url}
+                            alt=""
+                            className="max-h-[32rem] w-full rounded-lg object-cover"
+                        />
+                    ) : null}
                     <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                         {post.title}
                     </h1>

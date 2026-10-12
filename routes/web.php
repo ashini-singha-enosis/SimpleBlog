@@ -13,6 +13,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->group(function () {
+        Route::post('posts/{post}/revisions/{revision}/restore', [AdminPostController::class, 'restoreRevision'])
+            ->name('posts.revisions.restore');
         Route::resource('posts', AdminPostController::class)->except(['show']);
     });
 });

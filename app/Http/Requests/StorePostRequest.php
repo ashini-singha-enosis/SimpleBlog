@@ -36,6 +36,7 @@ class StorePostRequest extends FormRequest
             'category' => ['nullable', 'string', 'max:40'],
             'tags' => ['nullable', 'array', 'max:8'],
             'tags.*' => ['string', 'max:40', 'distinct'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
         ];
     }
 }

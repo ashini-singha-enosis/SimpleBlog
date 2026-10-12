@@ -53,4 +53,20 @@ interface PostServiceInterface
     public function update(Post $post, User $actor, array $data): Post;
 
     public function delete(Post $post, User $actor): void;
+
+    /**
+     * Statuses the actor may set on this post. A new post uses the create list.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function allowedStatuses(User $actor, ?Post $post = null): array;
+
+    /**
+     * Publish a scheduled post once its time has arrived.
+     *
+     * When an expected timestamp is given, a changed publish time makes this a no-op.
+     */
+    public function publishIfDue(int $postId, ?string $expectedPublishedAt = null): bool;
+
+    public function restoreRevision(Post $post, User $actor, int $revisionId): Post;
 }

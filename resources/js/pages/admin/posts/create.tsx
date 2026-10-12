@@ -5,12 +5,16 @@ import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { create, index } from '@/routes/admin/posts';
 
+import type { StatusOption } from '@/types/blog';
+
 export default function Create({
     categories = [],
     tags = [],
+    statuses = [],
 }: {
     categories?: string[];
     tags?: string[];
+    statuses?: StatusOption[];
 }) {
     return (
         <>
@@ -25,7 +29,11 @@ export default function Create({
                         <Link href={index()}>Cancel</Link>
                     </Button>
                 </div>
-                <PostForm categories={categories} tags={tags} />
+                <PostForm
+                    categories={categories}
+                    tags={tags}
+                    statuses={statuses}
+                />
             </div>
         </>
     );
