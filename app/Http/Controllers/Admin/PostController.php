@@ -11,7 +11,6 @@ use App\Models\Post;
 use App\Models\PostRevision;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,8 +53,6 @@ class PostController extends Controller
             abort(403);
         }
 
-        Gate::authorize('create', Post::class);
-
         return Inertia::render('admin/posts/create', [
             ...$posts->taxonomySuggestions(),
             'statuses' => $posts->allowedStatuses($user),
@@ -88,8 +85,6 @@ class PostController extends Controller
      */
     public function edit(Request $request, Post $post, PostServiceInterface $posts): Response
     {
-        Gate::authorize('update', $post);
-
         $user = $request->user();
 
         if ($user === null) {
@@ -159,7 +154,6 @@ class PostController extends Controller
      */
     public function restoreRevision(Request $request, Post $post, PostRevision $revision, PostServiceInterface $posts): RedirectResponse
     {
-        Gate::authorize('update', $post);
         abort_unless($revision->post_id === $post->id, 404);
 
         $user = $request->user();
@@ -187,8 +181,6 @@ class PostController extends Controller
      */
     public function destroy(Request $request, Post $post, PostServiceInterface $posts): RedirectResponse
     {
-        Gate::authorize('delete', $post);
-
         $user = $request->user();
 
         if ($user === null) {

@@ -10,9 +10,12 @@ use App\Events\PostUpdated;
 use App\Listeners\InvalidatePostCache;
 use App\Services\PostService;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -33,6 +36,25 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configurePostEvents();
+        $this->configureRateLimiting();
+    }
+
+    /**
+     * Limit how often a signed-in user can create or change posts.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('posts.create', function (Request $request): Limit {
+            $key = (string) ($request->user()?->id ?: $request->ip());
+
+            return Limit::perMinute(5)->by('posts-create:'.$key);
+        });
+
+        RateLimiter::for('posts.write', function (Request $request): Limit {
+            $key = (string) ($request->user()?->id ?: $request->ip());
+
+            return Limit::perMinute(30)->by('posts-write:'.$key);
+        });
     }
 
     /**

@@ -463,8 +463,11 @@ class PostService implements PostServiceInterface
 
         if ($post->status === PostStatus::Scheduled && $post->published_at !== null) {
             if ($post->published_at->isFuture()) {
-                PublishScheduledPost::dispatch($post->id, $post->published_at->toIso8601String())
-                    ->delay($post->published_at);
+                PublishScheduledPost::dispatch(
+                    $post->id,
+                    $post->published_at->toIso8601String(),
+                    $this->requestId(),
+                )->delay($post->published_at);
             } else {
                 $publishedByQueue = $this->publishIfDue($post->id);
                 $post->refresh();
@@ -472,7 +475,7 @@ class PostService implements PostServiceInterface
         }
 
         if ($this->imageToProcess !== null) {
-            ProcessPostImage::dispatch($post->id, $this->imageToProcess);
+            ProcessPostImage::dispatch($post->id, $this->imageToProcess, $this->requestId());
             $this->imageToProcess = null;
         }
 
@@ -485,6 +488,17 @@ class PostService implements PostServiceInterface
 
             PostPublished::dispatch($post);
         }
+    }
+
+    private function requestId(): ?string
+    {
+        if (! app()->bound('request')) {
+            return null;
+        }
+
+        $id = request()->attributes->get('request_id');
+
+        return is_string($id) && $id !== '' ? $id : null;
     }
 
     private function recordRevision(Post $post, User $actor): void

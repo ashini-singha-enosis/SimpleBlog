@@ -16,10 +16,18 @@ class ProcessPostImage implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public int $postId, public string $originalPath) {}
+    public function __construct(
+        public int $postId,
+        public string $originalPath,
+        public ?string $requestId = null,
+    ) {}
 
     public function handle(PostServiceInterface $posts): void
     {
+        if ($this->requestId !== null) {
+            Log::shareContext(['request_id' => $this->requestId]);
+        }
+
         if (! function_exists('imagecreatetruecolor')) {
             Log::warning('GD is missing, so the cover was left at its original size.', [
                 'post_id' => $this->postId,
