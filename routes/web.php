@@ -4,13 +4,18 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ReactionController;
 use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/posts/{post:slug}/reactions', [ReactionController::class, 'index'])->name('posts.reactions.index');
 Route::get('/posts/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/posts/{post:slug}/reactions', [ReactionController::class, 'store'])->name('posts.reactions.store');
+    Route::delete('/posts/{post:slug}/reactions', [ReactionController::class, 'destroy'])->name('posts.reactions.destroy');
+
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->group(function () {

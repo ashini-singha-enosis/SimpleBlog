@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\PostServiceInterface;
 use App\Models\Post;
 use App\Models\Tag;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,7 +14,7 @@ class PostController extends Controller
     /**
      * Show one publicly visible post.
      */
-    public function show(Post $post): Response
+    public function show(Request $request, Post $post, PostServiceInterface $posts): Response
     {
         abort_unless($post->isPubliclyVisible(), 404);
 
@@ -22,8 +24,11 @@ class PostController extends Controller
             'tags:id,name,slug',
         ]);
 
+        $reactions = $posts->reactionSummary($post, $request->user()?->id);
+
         return Inertia::render('posts/show', [
             'post' => [
+                'slug' => $post->slug,
                 'title' => $post->title,
                 'excerpt' => $post->excerpt,
                 'body' => $post->body,
@@ -40,6 +45,7 @@ class PostController extends Controller
                     'name' => $tag->name,
                     'slug' => $tag->slug,
                 ])->values()->all(),
+                ...$reactions,
             ],
         ]);
     }

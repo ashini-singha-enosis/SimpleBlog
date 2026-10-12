@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import PostReactions from '@/components/post-reactions';
 import PostTaxonomy from '@/components/post-taxonomy';
 import { formatPostDate } from '@/lib/dates';
 import { home } from '@/routes';
@@ -35,6 +36,12 @@ export default function Show({ post }: { post: PostDetail }) {
                         </time>
                     </p>
                     <PostTaxonomy category={post.category} tags={post.tags} />
+                    <PostReactions
+                        slug={post.slug}
+                        likesCount={post.likes_count}
+                        dislikesCount={post.dislikes_count}
+                        userReaction={post.user_reaction}
+                    />
                     {post.excerpt ? (
                         <p className="text-lg text-muted-foreground">
                             {post.excerpt}

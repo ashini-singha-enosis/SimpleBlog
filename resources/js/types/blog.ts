@@ -33,11 +33,14 @@ export type TagCount = TaxonomyTerm & {
     posts_count_label: string;
 };
 
+export type ReactionChoice = 'like' | 'dislike';
+
 export type PostSummary = {
     id: number;
     title: string;
     slug: string;
     excerpt: string | null;
+    body?: string | null;
     published_at: string | null;
     status?: PostStatusName;
     updated_at?: string | null;
@@ -47,9 +50,13 @@ export type PostSummary = {
     image_full_url?: string | null;
     category?: TaxonomyTerm | null;
     tags?: TaxonomyTerm[];
+    likes_count?: number;
+    dislikes_count?: number;
+    user_reaction?: ReactionChoice | null;
 };
 
 export type PostDetail = {
+    slug: string;
     title: string;
     excerpt: string | null;
     body: string;
@@ -58,6 +65,9 @@ export type PostDetail = {
     author: PostAuthor;
     category: TaxonomyTerm | null;
     tags: TaxonomyTerm[];
+    likes_count: number;
+    dislikes_count: number;
+    user_reaction: ReactionChoice | null;
 };
 
 export type PostFormData = {

@@ -69,4 +69,24 @@ interface PostServiceInterface
     public function publishIfDue(int $postId, ?string $expectedPublishedAt = null): bool;
 
     public function restoreRevision(Post $post, User $actor, int $revisionId): Post;
+
+    /**
+     * @param  array<string, mixed>  $page
+     * @return array<string, mixed>
+     */
+    public function withReactionSummaries(array $page, ?int $userId): array;
+
+    /**
+     * @return array{likes_count: int, dislikes_count: int, user_reaction: string|null}
+     */
+    public function reactionSummary(Post $post, ?int $userId): array;
+
+    public function toggleReaction(Post $post, User $user, string $type): void;
+
+    public function clearReaction(Post $post, User $user): void;
+
+    /**
+     * @return list<string>
+     */
+    public function reactionNames(Post $post, string $type): array;
 }

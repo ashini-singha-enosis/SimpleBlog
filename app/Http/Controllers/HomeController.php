@@ -26,13 +26,15 @@ class HomeController extends Controller
         $category = Str::limit($request->string('category')->trim()->toString(), 80, '');
         $tag = Str::limit($request->string('tag')->trim()->toString(), 80, '');
 
+        $page = $posts->paginatedPublished($request->integer('page', 1), filters: [
+            'author_id' => $authorId,
+            'q' => $q,
+            'category' => $category,
+            'tag' => $tag,
+        ]);
+
         return Inertia::render('home', [
-            'posts' => $posts->paginatedPublished($request->integer('page', 1), filters: [
-                'author_id' => $authorId,
-                'q' => $q,
-                'category' => $category,
-                'tag' => $tag,
-            ]),
+            'posts' => $posts->withReactionSummaries($page, $user?->id),
             'taxonomy' => $posts->homepageTaxonomy(),
             'filters' => [
                 'q' => $q,

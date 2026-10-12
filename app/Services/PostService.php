@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\PostServiceInterface;
 use App\Enums\PostStatus;
+use App\Enums\ReactionType;
 use App\Events\PostCreated;
 use App\Events\PostDeleted;
 use App\Events\PostPublished;
@@ -14,6 +15,7 @@ use App\Jobs\PublishScheduledPost;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostRevision;
+use App\Models\Reaction;
 use App\Models\Tag;
 use App\Models\User;
 use Carbon\Carbon;
@@ -56,7 +58,7 @@ class PostService implements PostServiceInterface
         $tag = $this->filterText($filters['tag'] ?? null);
         $version = (int) Cache::get(self::CACHE_VERSION_KEY, 1);
         $filterKey = hash('xxh128', json_encode([$authorId, $q, $category, $tag], JSON_THROW_ON_ERROR));
-        $key = "posts.published.v{$version}.{$filterKey}.page.{$page}.per.{$perPage}";
+        $key = "posts.published.v{$version}.{$filterKey}.page.{$page}.per.{$perPage}.body";
 
         return Cache::remember(
             $key,
@@ -93,7 +95,7 @@ class PostService implements PostServiceInterface
 
                 $paginator = $query->paginate(
                     $perPage,
-                    ['id', 'user_id', 'category_id', 'title', 'slug', 'excerpt', 'image_path', 'image_card_path', 'image_full_path', 'published_at'],
+                    ['id', 'user_id', 'category_id', 'title', 'slug', 'excerpt', 'body', 'image_path', 'image_card_path', 'image_full_path', 'published_at'],
                     'page',
                     $page,
                 );
@@ -112,6 +114,165 @@ class PostService implements PostServiceInterface
                 return $paginator->toArray();
             },
         );
+    }
+
+    /**
+     * Attach fresh like and dislike counts without storing them in the page cache.
+     *
+     * @param  array<string, mixed>  $page
+     * @return array<string, mixed>
+     */
+    public function withReactionSummaries(array $page, ?int $userId): array
+    {
+        $rows = $page['data'] ?? null;
+
+        if (! is_array($rows) || $rows === []) {
+            return $page;
+        }
+
+        $ids = [];
+
+        foreach ($rows as $row) {
+            if (is_array($row) && isset($row['id'])) {
+                $ids[] = (int) $row['id'];
+            }
+        }
+
+        $summaries = $this->reactionSummaries($ids, $userId);
+
+        foreach ($rows as $index => $row) {
+            if (! is_array($row) || ! isset($row['id'])) {
+                continue;
+            }
+
+            $page['data'][$index] = array_merge(
+                $row,
+                $summaries[(int) $row['id']] ?? $this->emptyReactionSummary(),
+            );
+        }
+
+        return $page;
+    }
+
+    /**
+     * @return array{likes_count: int, dislikes_count: int, user_reaction: string|null}
+     */
+    public function reactionSummary(Post $post, ?int $userId): array
+    {
+        return $this->reactionSummaries([$post->id], $userId)[$post->id] ?? $this->emptyReactionSummary();
+    }
+
+    public function toggleReaction(Post $post, User $user, string $type): void
+    {
+        $reaction = ReactionType::from($type);
+        $existing = Reaction::query()
+            ->where('user_id', $user->id)
+            ->whereMorphedTo('reactable', $post)
+            ->first();
+
+        if ($existing !== null && $existing->type === $reaction) {
+            $existing->delete();
+
+            return;
+        }
+
+        Reaction::query()->updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'reactable_type' => $post->getMorphClass(),
+                'reactable_id' => $post->id,
+            ],
+            ['type' => $reaction],
+        );
+    }
+
+    public function clearReaction(Post $post, User $user): void
+    {
+        Reaction::query()
+            ->where('user_id', $user->id)
+            ->whereMorphedTo('reactable', $post)
+            ->delete();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function reactionNames(Post $post, string $type): array
+    {
+        return $post->reactions()
+            ->where('type', ReactionType::from($type))
+            ->with('user:id,name')
+            ->latest()
+            ->get()
+            ->map(fn (Reaction $reaction): ?string => $reaction->user?->name)
+            ->filter(fn (?string $name): bool => $name !== null && $name !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<int>  $postIds
+     * @return array<int, array{likes_count: int, dislikes_count: int, user_reaction: string|null}>
+     */
+    private function reactionSummaries(array $postIds, ?int $userId): array
+    {
+        $summaries = [];
+
+        foreach ($postIds as $postId) {
+            $summaries[$postId] = $this->emptyReactionSummary();
+        }
+
+        if ($postIds === []) {
+            return $summaries;
+        }
+
+        $counts = Reaction::query()
+            ->where('reactable_type', (new Post)->getMorphClass())
+            ->whereIn('reactable_id', $postIds)
+            ->select('reactable_id', 'type')
+            ->selectRaw('count(*) as total')
+            ->groupBy('reactable_id', 'type')
+            ->get();
+
+        foreach ($counts as $count) {
+            $postId = (int) $count->getAttribute('reactable_id');
+            $total = (int) $count->getAttribute('total');
+            $type = $count->type;
+
+            if ($type === ReactionType::Like) {
+                $summaries[$postId]['likes_count'] = $total;
+            }
+
+            if ($type === ReactionType::Dislike) {
+                $summaries[$postId]['dislikes_count'] = $total;
+            }
+        }
+
+        if ($userId !== null) {
+            $mine = Reaction::query()
+                ->where('user_id', $userId)
+                ->where('reactable_type', (new Post)->getMorphClass())
+                ->whereIn('reactable_id', $postIds)
+                ->get(['reactable_id', 'type']);
+
+            foreach ($mine as $reaction) {
+                $summaries[(int) $reaction->reactable_id]['user_reaction'] = $reaction->type->value;
+            }
+        }
+
+        return $summaries;
+    }
+
+    /**
+     * @return array{likes_count: int, dislikes_count: int, user_reaction: string|null}
+     */
+    private function emptyReactionSummary(): array
+    {
+        return [
+            'likes_count' => 0,
+            'dislikes_count' => 0,
+            'user_reaction' => null,
+        ];
     }
 
     /**
