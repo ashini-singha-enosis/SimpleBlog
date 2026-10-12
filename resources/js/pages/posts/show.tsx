@@ -1,4 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
+import PostTaxonomy from '@/components/post-taxonomy';
 import { formatPostDate } from '@/lib/dates';
 import { home } from '@/routes';
 import type { PostDetail } from '@/types/blog';
@@ -11,9 +13,10 @@ export default function Show({ post }: { post: PostDetail }) {
                 <div className="space-y-4">
                     <Link
                         href={home()}
-                        className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                     >
-                        Back to posts
+                        <ArrowLeft className="size-4" />
+                        Blog
                     </Link>
                     <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                         {post.title}
@@ -24,6 +27,7 @@ export default function Show({ post }: { post: PostDetail }) {
                             {formatPostDate(post.published_at)}
                         </time>
                     </p>
+                    <PostTaxonomy category={post.category} tags={post.tags} />
                     {post.excerpt ? (
                         <p className="text-lg text-muted-foreground">
                             {post.excerpt}

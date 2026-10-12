@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { create, index } from '@/routes/admin/posts';
 
-export default function Create() {
+export default function Create({
+    categories = [],
+    tags = [],
+}: {
+    categories?: string[];
+    tags?: string[];
+}) {
     return (
         <>
             <Head title="New post" />
@@ -19,7 +25,7 @@ export default function Create() {
                         <Link href={index()}>Cancel</Link>
                     </Button>
                 </div>
-                <PostForm />
+                <PostForm categories={categories} tags={tags} />
             </div>
         </>
     );
@@ -28,7 +34,7 @@ export default function Create() {
 Create.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'Account',
             href: dashboard(),
         },
         {

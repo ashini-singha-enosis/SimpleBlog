@@ -44,11 +44,11 @@ class PostController extends Controller
     /**
      * Show the create post form.
      */
-    public function create(): Response
+    public function create(PostServiceInterface $posts): Response
     {
         Gate::authorize('create', Post::class);
 
-        return Inertia::render('admin/posts/create');
+        return Inertia::render('admin/posts/create', $posts->taxonomySuggestions());
     }
 
     /**
@@ -75,9 +75,11 @@ class PostController extends Controller
     /**
      * Show the edit post form.
      */
-    public function edit(Post $post): Response
+    public function edit(Post $post, PostServiceInterface $posts): Response
     {
         Gate::authorize('update', $post);
+
+        $post->load(['category:id,name', 'tags:id,name']);
 
         return Inertia::render('admin/posts/edit', [
             'post' => [
@@ -87,7 +89,10 @@ class PostController extends Controller
                 'body' => $post->body,
                 'status' => $post->status->value,
                 'published_at' => $post->published_at?->toIso8601String(),
+                'category' => $post->category?->name,
+                'tags' => $post->tags->pluck('name')->values()->all(),
             ],
+            ...$posts->taxonomySuggestions(),
         ]);
     }
 

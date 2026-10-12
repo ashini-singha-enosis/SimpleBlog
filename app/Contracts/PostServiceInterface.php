@@ -8,13 +8,34 @@ use App\Models\User;
 interface PostServiceInterface
 {
     /**
-     * Published posts for the homepage, cached per page.
+     * Published posts for the homepage, cached per page and filter set.
      *
+     * Supported filters: author_id, q (title contains), category (slug), tag (slug).
      * An author id limits the cached page to that user's public posts.
      *
+     * @param  array{author_id?: int|null, q?: string|null, category?: string|null, tag?: string|null}  $filters
      * @return array<string, mixed>
      */
-    public function paginatedPublished(int $page, int $perPage = 9, ?int $authorId = null): array;
+    public function paginatedPublished(int $page, int $perPage = 9, array $filters = []): array;
+
+    /**
+     * Categories and public tag counts for the homepage.
+     *
+     * Counts include only posts that are already public.
+     *
+     * @return array{
+     *     categories: list<array{name: string, slug: string}>,
+     *     tags: list<array{name: string, slug: string, posts_count: int, posts_count_label: string}>
+     * }
+     */
+    public function homepageTaxonomy(): array;
+
+    /**
+     * Existing category and tag names for the post form.
+     *
+     * @return array{categories: list<string>, tags: list<string>}
+     */
+    public function taxonomySuggestions(): array;
 
     /**
      * Drop every cached homepage page by moving the cache version forward.

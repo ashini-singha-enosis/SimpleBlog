@@ -1,4 +1,5 @@
 import { Form } from '@inertiajs/react';
+import { useState } from 'react';
 import PostController from '@/actions/App/Http/Controllers/Admin/PostController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,49 @@ import type { PostFormData } from '@/types/blog';
 const fieldClassName =
     'border-input focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px]';
 
-export default function PostForm({ post }: { post?: PostFormData }) {
+export default function PostForm({
+    post,
+    categories = [],
+    tags = [],
+}: {
+    post?: PostFormData;
+    categories?: string[];
+    tags?: string[];
+}) {
+    const [selectedTags, setSelectedTags] = useState<string[]>(
+        post?.tags ?? [],
+    );
+    const [tagQuery, setTagQuery] = useState('');
+    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+    const normalizedQuery = tagQuery.trim().toLowerCase();
+    const suggestions = tags.filter(
+        (name) =>
+            normalizedQuery !== '' &&
+            name.toLowerCase().includes(normalizedQuery) &&
+            !selectedTags.some(
+                (selected) => selected.toLowerCase() === name.toLowerCase(),
+            ),
+    );
+
+    function addTag(name: string) {
+        const trimmed = name.trim();
+
+        if (
+            trimmed === '' ||
+            trimmed.length > 40 ||
+            selectedTags.length >= 8 ||
+            selectedTags.some(
+                (selected) => selected.toLowerCase() === trimmed.toLowerCase(),
+            )
+        ) {
+            return;
+        }
+
+        setSelectedTags((current) => [...current, trimmed]);
+        setTagQuery('');
+        setSuggestionsOpen(false);
+    }
+
     return (
         <Form
             {...(post
@@ -27,6 +70,7 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                         typeof publishedAt === 'string'
                             ? toUtcIsoFromLocalDateTime(publishedAt)
                             : publishedAt,
+                    tags: selectedTags,
                 };
             }}
             className="space-y-6"
@@ -141,6 +185,108 @@ export default function PostForm({ post }: { post?: PostFormData }) {
                                 message={errors.published_at}
                             />
                         </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="category">Category</Label>
+                        <Input
+                            id="category"
+                            name="category"
+                            list="category-suggestions"
+                            maxLength={40}
+                            defaultValue={post?.category ?? ''}
+                            placeholder="Optional, one category"
+                            aria-invalid={errors.category ? true : undefined}
+                            aria-describedby={
+                                errors.category ? 'category-error' : undefined
+                            }
+                        />
+                        <datalist id="category-suggestions">
+                            {categories.map((name) => (
+                                <option key={name} value={name} />
+                            ))}
+                        </datalist>
+                        <InputError
+                            id="category-error"
+                            message={errors.category}
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="tag-input">Tags</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {selectedTags.map((name) => (
+                                <button
+                                    key={name}
+                                    type="button"
+                                    className="rounded-full border px-3 py-1 text-sm"
+                                    onClick={() =>
+                                        setSelectedTags((current) =>
+                                            current.filter(
+                                                (tag) => tag !== name,
+                                            ),
+                                        )
+                                    }
+                                >
+                                    {name}
+                                    <span className="sr-only">Remove tag</span>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="relative">
+                            <Input
+                                id="tag-input"
+                                value={tagQuery}
+                                maxLength={40}
+                                placeholder="Type a tag and press Enter"
+                                aria-invalid={errors.tags ? true : undefined}
+                                aria-describedby={
+                                    errors.tags ? 'tags-error' : undefined
+                                }
+                                onChange={(event) => {
+                                    setTagQuery(event.target.value);
+                                    setSuggestionsOpen(true);
+                                }}
+                                onFocus={() => setSuggestionsOpen(true)}
+                                onBlur={() => setSuggestionsOpen(false)}
+                                onKeyDown={(event) => {
+                                    if (event.key !== 'Enter') {
+                                        return;
+                                    }
+
+                                    event.preventDefault();
+                                    const exact = suggestions.find(
+                                        (name) =>
+                                            name.toLowerCase() ===
+                                            normalizedQuery,
+                                    );
+                                    addTag(exact ?? tagQuery);
+                                }}
+                            />
+                            {suggestionsOpen && suggestions.length > 0 ? (
+                                <ul className="absolute z-10 mt-1 max-h-40 w-full overflow-auto rounded-md border bg-popover p-1 text-sm shadow-md">
+                                    {suggestions.map((name) => (
+                                        <li key={name}>
+                                            <button
+                                                type="button"
+                                                className="w-full rounded-sm px-2 py-1.5 text-left hover:bg-accent"
+                                                onMouseDown={(event) => {
+                                                    event.preventDefault();
+                                                    addTag(name);
+                                                }}
+                                            >
+                                                {name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : null}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            Up to 8 tags. Press Enter to add a new one, or
+                            click a tag to remove it.
+                        </p>
+                        <InputError id="tags-error" message={errors.tags} />
                     </div>
 
                     <Button type="submit" disabled={processing}>

@@ -6,7 +6,15 @@ import { dashboard } from '@/routes';
 import { index } from '@/routes/admin/posts';
 import type { PostFormData } from '@/types/blog';
 
-export default function Edit({ post }: { post: PostFormData }) {
+export default function Edit({
+    post,
+    categories = [],
+    tags = [],
+}: {
+    post: PostFormData;
+    categories?: string[];
+    tags?: string[];
+}) {
     return (
         <>
             <Head title={`Edit ${post.title}`} />
@@ -20,7 +28,7 @@ export default function Edit({ post }: { post: PostFormData }) {
                         <Link href={index()}>Back</Link>
                     </Button>
                 </div>
-                <PostForm post={post} />
+                <PostForm post={post} categories={categories} tags={tags} />
             </div>
         </>
     );
@@ -29,7 +37,7 @@ export default function Edit({ post }: { post: PostFormData }) {
 Edit.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'Account',
             href: dashboard(),
         },
         {

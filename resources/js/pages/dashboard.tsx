@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { FileText, House } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -40,7 +41,7 @@ export default function Dashboard({ stats }: { stats: Stats }) {
 
     return (
         <>
-            <Head title="Dashboard" />
+            <Head title="Account" />
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div className="space-y-1">
@@ -53,10 +54,16 @@ export default function Dashboard({ stats }: { stats: Stats }) {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" asChild>
-                            <Link href={home()}>View site</Link>
+                            <Link href={home()}>
+                                <House className="size-4" />
+                                Blog
+                            </Link>
                         </Button>
                         <Button asChild>
-                            <Link href={managePosts()}>Manage posts</Link>
+                            <Link href={managePosts()}>
+                                <FileText className="size-4" />
+                                Posts
+                            </Link>
                         </Button>
                     </div>
                 </div>
@@ -86,7 +93,7 @@ export default function Dashboard({ stats }: { stats: Stats }) {
 Dashboard.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'Account',
             href: dashboard(),
         },
     ],

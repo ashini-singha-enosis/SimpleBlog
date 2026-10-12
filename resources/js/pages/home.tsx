@@ -1,85 +1,182 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { Search, Tag, X } from 'lucide-react';
 import Pagination from '@/components/pagination';
 import PostCard from '@/components/post-card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { home } from '@/routes';
-import type { Auth } from '@/types';
-import type { Paginated, PostSummary } from '@/types/blog';
+import type {
+    HomeFilters,
+    Paginated,
+    PostSummary,
+    TagCount,
+    TaxonomyTerm,
+} from '@/types/blog';
+
+function listingHref(
+    filters: HomeFilters,
+    overrides: Partial<HomeFilters> = {},
+) {
+    const next = { ...filters, ...overrides };
+    const query: Record<string, string | number> = {};
+
+    if (next.q) {
+        query.q = next.q;
+    }
+
+    if (next.category) {
+        query.category = next.category;
+    }
+
+    if (next.tag) {
+        query.tag = next.tag;
+    }
+
+    if (next.mine) {
+        query.mine = 1;
+    }
+
+    return home({ query });
+}
 
 export default function Home({
     posts,
     filters,
+    taxonomy,
 }: {
     posts: Paginated<PostSummary>;
-    filters: { mine: boolean };
+    filters: HomeFilters;
+    taxonomy: {
+        categories: TaxonomyTerm[];
+        tags: TagCount[];
+    };
 }) {
-    const { auth } = usePage<{ auth: Auth }>().props;
-    const showingMine = filters.mine;
+    const searching =
+        filters.q !== '' || filters.category !== '' || filters.tag !== '';
+    const activeCategory = taxonomy.categories.find(
+        (category) => category.slug === filters.category,
+    );
 
     return (
         <>
-            <Head title="Posts" />
-            <div className="space-y-8">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                            {showingMine ? 'Your posts' : 'Latest posts'}
-                        </h1>
-                        <p className="max-w-2xl text-muted-foreground">
-                            {showingMine
-                                ? 'Published posts you have written.'
-                                : 'Notes and articles from the people writing here.'}
-                        </p>
-                    </div>
-
-                    {auth.user ? (
-                        <div
-                            className="flex gap-2"
-                            role="group"
-                            aria-label="Filter posts"
+            <Head title="Blog" />
+            <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
+                <div className="min-w-0 space-y-2">
+                    <form
+                        action={home()}
+                        method="get"
+                        className="flex flex-wrap items-center gap-2"
+                    >
+                        {filters.mine ? (
+                            <input type="hidden" name="mine" value="1" />
+                        ) : null}
+                        {filters.tag ? (
+                            <input type="hidden" name="tag" value={filters.tag} />
+                        ) : null}
+                        <div className="relative min-w-[12rem] flex-1">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                id="q"
+                                name="q"
+                                defaultValue={filters.q}
+                                placeholder="Search"
+                                aria-label="Search titles"
+                                className="pl-9"
+                            />
+                        </div>
+                        <select
+                            id="category"
+                            name="category"
+                            defaultValue={filters.category}
+                            aria-label="Category"
+                            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
                         >
+                            <option value="">All categories</option>
+                            {taxonomy.categories.map((category) => (
+                                <option
+                                    key={category.slug}
+                                    value={category.slug}
+                                >
+                                    {category.name}
+                                </option>
+                            ))}
+                            {filters.category && !activeCategory ? (
+                                <option value={filters.category}>
+                                    {filters.category}
+                                </option>
+                            ) : null}
+                        </select>
+                        <Button type="submit" size="icon" aria-label="Search">
+                            <Search className="size-4" />
+                        </Button>
+                        {searching ? (
                             <Button
-                                variant={showingMine ? 'outline' : 'default'}
-                                size="sm"
+                                variant="ghost"
+                                size="icon"
                                 asChild
+                                aria-label="Clear search"
                             >
-                                <Link href={home()}>All posts</Link>
-                            </Button>
-                            <Button
-                                variant={showingMine ? 'default' : 'outline'}
-                                size="sm"
-                                asChild
-                            >
-                                <Link href={home({ query: { mine: 1 } })}>
-                                    My posts
+                                <Link
+                                    href={listingHref(filters, {
+                                        q: '',
+                                        category: '',
+                                        tag: '',
+                                    })}
+                                >
+                                    <X className="size-4" />
                                 </Link>
                             </Button>
+                        ) : null}
+                    </form>
+
+                    {posts.data.length === 0 ? (
+                        <p className="py-16 text-center text-sm text-muted-foreground">
+                            {searching ? 'Nothing matched' : 'No posts yet'}
+                        </p>
+                    ) : (
+                        <div>
+                            {posts.data.map((post) => (
+                                <PostCard key={post.id} post={post} />
+                            ))}
                         </div>
-                    ) : null}
+                    )}
+
+                    <Pagination links={posts.links} lastPage={posts.last_page} />
                 </div>
 
-                {posts.data.length === 0 ? (
-                    <div className="rounded-xl border border-dashed px-6 py-16 text-center">
-                        <h2 className="text-lg font-medium">
-                            {showingMine
-                                ? 'You have not published any posts yet'
-                                : 'No posts yet'}
-                        </h2>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            {showingMine
-                                ? 'Publish a post and it will show up here.'
-                                : 'Published posts will show up here.'}
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {posts.data.map((post) => (
-                            <PostCard key={post.id} post={post} />
-                        ))}
-                    </div>
-                )}
-
-                <Pagination links={posts.links} lastPage={posts.last_page} />
+                <aside className="space-y-3 lg:sticky lg:top-6">
+                    <h2 className="flex items-center gap-2 text-sm font-medium">
+                        <Tag className="size-4" />
+                        Tags
+                    </h2>
+                    {taxonomy.tags.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No tags</p>
+                    ) : (
+                        <div className="flex flex-col gap-1">
+                            {taxonomy.tags.map((tag) => (
+                                <Link
+                                    key={tag.slug}
+                                    href={listingHref(filters, {
+                                        tag:
+                                            filters.tag === tag.slug
+                                                ? ''
+                                                : tag.slug,
+                                    })}
+                                    className={
+                                        filters.tag === tag.slug
+                                            ? 'flex items-center justify-between rounded-md bg-accent px-2 py-1.5 text-sm font-medium'
+                                            : 'flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground'
+                                    }
+                                >
+                                    <span>{tag.name}</span>
+                                    <span className="text-xs tabular-nums">
+                                        {tag.posts_count_label}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </aside>
             </div>
         </>
     );

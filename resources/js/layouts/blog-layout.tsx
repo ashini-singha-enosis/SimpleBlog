@@ -1,69 +1,111 @@
 import { Link, usePage } from '@inertiajs/react';
+import {
+    CircleUser,
+    FileText,
+    House,
+    LogIn,
+    UserPen,
+    UserPlus,
+} from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { dashboard, home, login, register } from '@/routes';
 import { index as managePosts } from '@/routes/admin/posts';
+import { cn } from '@/lib/utils';
 import type { Auth } from '@/types';
+
+function itemClass(active: boolean) {
+    return cn(
+        'flex items-center gap-2 rounded-md px-3 py-2 text-sm whitespace-nowrap',
+        active
+            ? 'bg-accent font-medium text-foreground'
+            : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+    );
+}
 
 export default function BlogLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const { auth, name } = usePage<{ auth: Auth; name: string }>().props;
+    const page = usePage<{ auth: Auth; name: string }>();
+    const { auth, name } = page.props;
+    const pathname = page.url.split('?')[0];
+    const mine =
+        new URLSearchParams(page.url.split('?')[1] ?? '').get('mine') === '1';
+    const onBlog = pathname === '/';
+
+    const myPostsHref = (() => {
+        if (!onBlog) {
+            return home({ query: { mine: 1 } });
+        }
+
+        const params = new URLSearchParams(page.url.split('?')[1] ?? '');
+        params.set('mine', '1');
+        params.delete('page');
+
+        return `/?${params.toString()}`;
+    })();
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <header className="border-b border-border">
-                <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4">
-                    <Link
-                        href={home()}
-                        className="flex items-center gap-2 font-semibold"
-                    >
+        <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
+            <aside className="border-b lg:border-r lg:border-b-0">
+                <div className="flex items-center gap-2 px-4 py-4">
+                    <Link href={home()} className="flex items-center gap-2 font-semibold">
                         <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
                             <AppLogoIcon className="size-5 fill-current" />
                         </span>
-                        <span>{name}</span>
+                        <span className="truncate">{name}</span>
                     </Link>
-
-                    <nav
-                        aria-label="Account"
-                        className="flex items-center gap-2"
-                    >
-                        {auth.user ? (
-                            <>
-                                <Link
-                                    href={managePosts()}
-                                    className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-                                >
-                                    Manage posts
-                                </Link>
-                                <Link
-                                    href={dashboard()}
-                                    className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-                                >
-                                    Dashboard
-                                </Link>
-                            </>
-                        ) : (
-                            <>
-                                <Link
-                                    href={login()}
-                                    className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-                                >
-                                    Log in
-                                </Link>
-                                <Link
-                                    href={register()}
-                                    className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                                >
-                                    Register
-                                </Link>
-                            </>
-                        )}
-                    </nav>
                 </div>
-            </header>
-            <main className="mx-auto w-full max-w-5xl px-4 py-10">{children}</main>
+                <nav
+                    aria-label="Site"
+                    className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:px-3 lg:pb-6"
+                >
+                    <Link href={home()} className={itemClass(onBlog && !mine)}>
+                        <House className="size-4" />
+                        Blog
+                    </Link>
+                    {auth.user ? (
+                        <>
+                            <Link
+                                href={managePosts()}
+                                className={itemClass(false)}
+                            >
+                                <FileText className="size-4" />
+                                Posts
+                            </Link>
+                            <Link
+                                href={dashboard()}
+                                className={itemClass(false)}
+                            >
+                                <CircleUser className="size-4" />
+                                Account
+                            </Link>
+                            <Link
+                                href={myPostsHref}
+                                className={itemClass(onBlog && mine)}
+                            >
+                                <UserPen className="size-4" />
+                                My posts
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link href={login()} className={itemClass(false)}>
+                                <LogIn className="size-4" />
+                                Log in
+                            </Link>
+                            <Link href={register()} className={itemClass(false)}>
+                                <UserPlus className="size-4" />
+                                Register
+                            </Link>
+                        </>
+                    )}
+                </nav>
+            </aside>
+            <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-8">
+                {children}
+            </main>
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { FileText, House, LayoutGrid } from 'lucide-react';
+import { CircleUser, FileText, House } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -18,9 +18,9 @@ import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
+        title: 'Blog',
+        href: home(),
+        icon: House,
     },
     {
         title: 'Posts',
@@ -28,9 +28,9 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
     },
     {
-        title: 'View site',
-        href: home(),
-        icon: House,
+        title: 'Account',
+        href: dashboard(),
+        icon: CircleUser,
     },
 ];
 

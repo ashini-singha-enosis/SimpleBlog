@@ -102,7 +102,7 @@ export default function Index({ posts }: { posts: Paginated<PostSummary> }) {
 Index.layout = {
     breadcrumbs: [
         {
-            title: 'Dashboard',
+            title: 'Account',
             href: dashboard(),
         },
         {

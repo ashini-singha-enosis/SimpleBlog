@@ -33,6 +33,9 @@ class StorePostRequest extends FormRequest
             'body' => ['required', 'string', 'min:20'],
             'status' => ['required', Rule::enum(PostStatus::class)],
             'published_at' => ['nullable', 'date'],
+            'category' => ['nullable', 'string', 'max:40'],
+            'tags' => ['nullable', 'array', 'max:8'],
+            'tags.*' => ['string', 'max:40', 'distinct'],
         ];
     }
 }
