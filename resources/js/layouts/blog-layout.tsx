@@ -47,8 +47,8 @@ export default function BlogLayout({
     })();
 
     return (
-        <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
-            <aside className="border-b lg:border-r lg:border-b-0">
+        <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
+            <aside className="shrink-0 overflow-x-auto border-b lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-b-0">
                 <div className="flex items-center gap-2 px-4 py-4">
                     <Link href={home()} className="flex items-center gap-2 font-semibold">
                         <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -103,7 +103,7 @@ export default function BlogLayout({
                     )}
                 </nav>
             </aside>
-            <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-8">
+            <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-y-auto px-4 py-6 lg:px-8">
                 {children}
             </main>
         </div>

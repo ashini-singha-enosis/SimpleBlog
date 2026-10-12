@@ -60,12 +60,11 @@ export default function Home({
     return (
         <>
             <Head title="Blog" />
-            <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
-                <div className="min-w-0 space-y-2">
+            <div className="grid h-full min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_15rem] lg:grid-rows-[auto_minmax(0,1fr)] lg:gap-x-10">
                     <form
                         action={home()}
                         method="get"
-                        className="flex flex-wrap items-center gap-2"
+                        className="flex flex-wrap items-center gap-2 lg:col-start-1 lg:row-start-1"
                     >
                         {filters.mine ? (
                             <input type="hidden" name="mine" value="1" />
@@ -129,22 +128,7 @@ export default function Home({
                         ) : null}
                     </form>
 
-                    {posts.data.length === 0 ? (
-                        <p className="py-16 text-center text-sm text-muted-foreground">
-                            {searching ? 'Nothing matched' : 'No posts yet'}
-                        </p>
-                    ) : (
-                        <div>
-                            {posts.data.map((post) => (
-                                <PostCard key={post.id} post={post} />
-                            ))}
-                        </div>
-                    )}
-
-                    <Pagination links={posts.links} lastPage={posts.last_page} />
-                </div>
-
-                <aside className="space-y-3 lg:sticky lg:top-6">
+                <aside className="max-h-40 space-y-3 overflow-y-auto lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:max-h-none lg:min-h-0">
                     <h2 className="flex items-center gap-2 text-sm font-medium">
                         <Tag className="size-4" />
                         Tags
@@ -177,6 +161,22 @@ export default function Home({
                         </div>
                     )}
                 </aside>
+
+                <div className="min-h-0 overflow-y-auto lg:col-start-1 lg:row-start-2">
+                    {posts.data.length === 0 ? (
+                        <p className="py-16 text-center text-sm text-muted-foreground">
+                            {searching ? 'Nothing matched' : 'No posts yet'}
+                        </p>
+                    ) : (
+                        <div>
+                            {posts.data.map((post) => (
+                                <PostCard key={post.id} post={post} />
+                            ))}
+                        </div>
+                    )}
+
+                    <Pagination links={posts.links} lastPage={posts.last_page} />
+                </div>
             </div>
         </>
     );
