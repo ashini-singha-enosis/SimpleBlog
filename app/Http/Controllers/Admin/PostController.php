@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
-use App\Services\PostService;
+use App\Contracts\PostServiceInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -54,7 +54,7 @@ class PostController extends Controller
     /**
      * Store a new post.
      */
-    public function store(StorePostRequest $request, PostService $posts): RedirectResponse
+    public function store(StorePostRequest $request, PostServiceInterface $posts): RedirectResponse
     {
         $user = $request->user();
 
@@ -94,7 +94,7 @@ class PostController extends Controller
     /**
      * Update an existing post.
      */
-    public function update(UpdatePostRequest $request, Post $post, PostService $posts): RedirectResponse
+    public function update(UpdatePostRequest $request, Post $post, PostServiceInterface $posts): RedirectResponse
     {
         $user = $request->user();
 
@@ -115,7 +115,7 @@ class PostController extends Controller
     /**
      * Soft delete a post.
      */
-    public function destroy(Request $request, Post $post, PostService $posts): RedirectResponse
+    public function destroy(Request $request, Post $post, PostServiceInterface $posts): RedirectResponse
     {
         Gate::authorize('delete', $post);
 

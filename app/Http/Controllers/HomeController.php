@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\PostService;
+use App\Contracts\PostServiceInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,7 +12,7 @@ class HomeController extends Controller
     /**
      * Show the paginated list of published posts.
      */
-    public function index(Request $request, PostService $posts): Response
+    public function index(Request $request, PostServiceInterface $posts): Response
     {
         $user = $request->user();
         $authorId = null;

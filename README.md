@@ -28,7 +28,7 @@ The request flow is:
 
 Browser → React/Inertia → routes → middleware → form request → controller → `PostService` → Eloquent → MySQL
 
-There is no repository layer, DTO layer, or extra interface for posts.
+There is no repository layer or DTO layer for posts. `PostService` implements `PostServiceInterface`, and controllers and the cache listener depend on that contract.
 
 ## Installation
 

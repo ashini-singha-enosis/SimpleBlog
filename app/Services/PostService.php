@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\PostServiceInterface;
 use App\Enums\PostStatus;
 use App\Events\PostCreated;
 use App\Events\PostDeleted;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class PostService
+class PostService implements PostServiceInterface
 {
     public const string CACHE_VERSION_KEY = 'posts.published.version';
 
@@ -34,6 +35,7 @@ class PostService
         $authorKey = $authorId === null ? 'all' : "author.{$authorId}";
         $key = "posts.published.v{$version}.{$authorKey}.page.{$page}.per.{$perPage}";
 
+    
         return Cache::remember(
             $key,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
