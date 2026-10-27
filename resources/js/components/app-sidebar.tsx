@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { CircleUser, FileText, House } from 'lucide-react';
+import { CircleUser, FileText, House, Video } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -26,6 +26,11 @@ const mainNavItems: NavItem[] = [
         title: 'Posts',
         href: posts(),
         icon: FileText,
+    },
+    {
+        title: 'Videos',
+        href: '/admin/videos',
+        icon: Video,
     },
     {
         title: 'Account',

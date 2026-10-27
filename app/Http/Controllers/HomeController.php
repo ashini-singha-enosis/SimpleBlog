@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\CommentServiceInterface;
 use App\Contracts\PostServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,7 +14,7 @@ class HomeController extends Controller
     /**
      * Show the paginated list of published posts.
      */
-    public function index(Request $request, PostServiceInterface $posts): Response
+    public function index(Request $request, PostServiceInterface $posts, CommentServiceInterface $comments): Response
     {
         $user = $request->user();
         $authorId = null;
@@ -34,7 +35,7 @@ class HomeController extends Controller
         ]);
 
         return Inertia::render('home', [
-            'posts' => $posts->withReactionSummaries($page, $user?->id),
+            'posts' => $comments->withCounts($posts->withReactionSummaries($page, $user?->id)),
             'taxonomy' => $posts->homepageTaxonomy(),
             'filters' => [
                 'q' => $q,

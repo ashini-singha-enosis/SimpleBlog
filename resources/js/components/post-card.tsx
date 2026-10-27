@@ -59,6 +59,13 @@ export default function PostCard({ post }: { post: PostSummary }) {
                 dislikesCount={post.dislikes_count ?? 0}
                 userReaction={post.user_reaction ?? null}
             />
+            <Link
+                href={show(post.slug)}
+                className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+                {post.comments_count ?? 0}{' '}
+                {(post.comments_count ?? 0) === 1 ? 'comment' : 'comments'}
+            </Link>
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
                     <DialogHeader>

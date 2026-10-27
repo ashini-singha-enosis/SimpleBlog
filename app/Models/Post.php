@@ -143,6 +143,14 @@ class Post extends Model
     }
 
     /**
+     * @return MorphMany<Comment, $this>
+     */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    /**
      * Posts that are visible on the public site.
      *
      * @param  Builder<Post>  $query

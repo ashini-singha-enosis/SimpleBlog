@@ -53,6 +53,40 @@ export type PostSummary = {
     likes_count?: number;
     dislikes_count?: number;
     user_reaction?: ReactionChoice | null;
+    comments_count?: number;
+};
+
+export type CommentSummary = {
+    id: number;
+    body: string;
+    created_at: string | null;
+    author: PostAuthor;
+    can_delete: boolean;
+};
+
+export type VideoSummary = {
+    id: number;
+    caption: string;
+    slug: string;
+    video_url?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    author?: PostAuthor | null;
+};
+
+export type VideoDetail = {
+    slug: string;
+    caption: string;
+    video_url: string | null;
+    created_at: string | null;
+    author: PostAuthor;
+};
+
+export type VideoFormData = {
+    id: number;
+    caption: string;
+    slug: string;
+    video_url?: string | null;
 };
 
 export type PostDetail = {

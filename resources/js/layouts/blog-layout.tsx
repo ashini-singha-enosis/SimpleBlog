@@ -6,6 +6,7 @@ import {
     LogIn,
     UserPen,
     UserPlus,
+    Video,
 } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { dashboard, home, login, register } from '@/routes';
@@ -64,6 +65,13 @@ export default function BlogLayout({
                     <Link href={home()} className={itemClass(onBlog && !mine)}>
                         <House className="size-4" />
                         Blog
+                    </Link>
+                    <Link
+                        href="/videos"
+                        className={itemClass(pathname.startsWith('/videos'))}
+                    >
+                        <Video className="size-4" />
+                        Videos
                     </Link>
                     {auth.user ? (
                         <>

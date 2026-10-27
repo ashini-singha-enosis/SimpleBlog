@@ -1,12 +1,21 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import CommentList from '@/components/comment-list';
 import PostReactions from '@/components/post-reactions';
 import PostTaxonomy from '@/components/post-taxonomy';
 import { formatPostDate } from '@/lib/dates';
 import { home } from '@/routes';
-import type { PostDetail } from '@/types/blog';
+import type { CommentSummary, Paginated, PostDetail } from '@/types/blog';
 
-export default function Show({ post }: { post: PostDetail }) {
+export default function Show({
+    post,
+    comments,
+    can_comment,
+}: {
+    post: PostDetail;
+    comments: Paginated<CommentSummary>;
+    can_comment: boolean;
+}) {
     return (
         <>
             <Head title={post.title} />
@@ -51,6 +60,11 @@ export default function Show({ post }: { post: PostDetail }) {
                 <div className="border-t pt-8 text-base leading-7 whitespace-pre-wrap break-words">
                     {post.body}
                 </div>
+                <CommentList
+                    storeUrl={`/posts/${post.slug}/comments`}
+                    comments={comments}
+                    canComment={can_comment}
+                />
             </article>
         </>
     );

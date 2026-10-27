@@ -520,6 +520,7 @@ class PostService implements PostServiceInterface
     public function delete(Post $post, User $actor): void
     {
         $this->deleteStoredImages($post);
+        $post->comments()->delete();
         $post->image_path = null;
         $post->image_card_path = null;
         $post->image_full_path = null;

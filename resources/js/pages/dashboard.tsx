@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { FileText, House } from 'lucide-react';
+import { FileText, House, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -63,6 +63,12 @@ export default function Dashboard({ stats }: { stats: Stats }) {
                             <Link href={managePosts()}>
                                 <FileText className="size-4" />
                                 Posts
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <Link href="/admin/videos">
+                                <Video className="size-4" />
+                                Videos
                             </Link>
                         </Button>
                     </div>

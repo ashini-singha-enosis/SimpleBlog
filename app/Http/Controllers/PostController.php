@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\CommentServiceInterface;
 use App\Contracts\PostServiceInterface;
 use App\Models\Post;
 use App\Models\Tag;
@@ -14,7 +15,7 @@ class PostController extends Controller
     /**
      * Show one publicly visible post.
      */
-    public function show(Request $request, Post $post, PostServiceInterface $posts): Response
+    public function show(Request $request, Post $post, PostServiceInterface $posts, CommentServiceInterface $comments): Response
     {
         abort_unless($post->isPubliclyVisible(), 404);
 
@@ -47,6 +48,12 @@ class PostController extends Controller
                 ])->values()->all(),
                 ...$reactions,
             ],
+            'comments' => $comments->forCommentable(
+                $post,
+                $request->user(),
+                $request->integer('comments', 1),
+            ),
+            'can_comment' => $request->user()?->hasVerifiedEmail() === true,
         ]);
     }
 }

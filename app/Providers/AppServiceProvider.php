@@ -2,15 +2,22 @@
 
 namespace App\Providers;
 
+use App\Contracts\CommentServiceInterface;
 use App\Contracts\PostServiceInterface;
+use App\Contracts\VideoServiceInterface;
 use App\Events\PostCreated;
 use App\Events\PostDeleted;
 use App\Events\PostPublished;
 use App\Events\PostUpdated;
 use App\Listeners\InvalidatePostCache;
+use App\Models\Post;
+use App\Models\Video;
+use App\Services\CommentService;
 use App\Services\PostService;
+use App\Services\VideoService;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(PostServiceInterface::class, PostService::class);
+        $this->app->bind(VideoServiceInterface::class, VideoService::class);
+        $this->app->bind(CommentServiceInterface::class, CommentService::class);
     }
 
     /**
@@ -35,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureMorphMap();
         $this->configurePostEvents();
         $this->configureRateLimiting();
     }
@@ -55,6 +65,23 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(30)->by('posts-write:'.$key);
         });
+
+        RateLimiter::for('comments.create', function (Request $request): Limit {
+            $key = (string) ($request->user()?->id ?: $request->ip());
+
+            return Limit::perMinute(10)->by('comments-create:'.$key);
+        });
+    }
+
+    /**
+     * Keep morph type names stable if model class names move.
+     */
+    protected function configureMorphMap(): void
+    {
+        Relation::enforceMorphMap([
+            'post' => Post::class,
+            'video' => Video::class,
+        ]);
     }
 
     /**
